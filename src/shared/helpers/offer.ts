@@ -1,12 +1,11 @@
 import { Offer, User, Location, City, HousingType } from '../types/index.js';
 
 function parseUser(user: string): User {
-  const [name, email, avatarPath, password, isPro] = user.split(';');
+  const [name, email, avatarPath, ,isPro] = user.split(';');
   return {
     name,
     email,
     avatarPath,
-    password,
     isPro: isPro === 'Pro'
   };
 }
