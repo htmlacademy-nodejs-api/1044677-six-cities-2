@@ -3,4 +3,5 @@ export class CreateUserDto {
   public avatarPath: string;
   public name: string;
   public password: string;
+  public isPro: boolean;
 }
