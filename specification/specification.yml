@@ -50,11 +50,45 @@ paths:
       summary: Авторизация пользователя
       description: Авторизует пользователя на основе логина и пароля
 
+      requestBody:
+        description: Информация для авторизации пользователя.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginUser'
+        required: true
+
+      responses:
+        "200":
+          description: Пользователь авторизован. Объект пользователя.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+
+        "401":
+          description: Неверный логин или пароль.
+
     get:
       tags:
         - users
       summary: Проверка состояния пользователя
       description: Возвращает информацию по авторизованному пользователю
+
+      responses:
+        "200":
+          description: Пользователь авторизован. Объект пользователя.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+
+        "401":
+          description: Неверный логин или пароль.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
 
   /users/{userId}/avatar:
     post:
@@ -64,6 +98,30 @@ paths:
       description: Загружает изображение аватара пользователя. Изображение
         аватара должно быть в формате `png` или `jpg`.
 
+      requestBody:
+        description: Информация для загрузки изображения аватара.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+        required: true
+
+      responses:
+        "200":
+          description: Изображение аватара загружено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+
+        "400":
+          description: Неверный формат изображения.
 components:
   schemas:
     createUser:
@@ -97,6 +155,12 @@ components:
 
     user:
       type: object
+      required:
+        - id
+        - email
+        - name
+        - avatarPath
+        - isPro
 
       properties:
         id:
@@ -106,3 +170,41 @@ components:
         email:
           type: string
           example: keks@htmlacademy.ru
+
+        name:
+          type: string
+          example: Keks the Cat
+
+        avatarPath:
+          type: string
+          example: img/avatar.jpg
+
+        isPro:
+          type: boolean
+          example: false
+
+    loginUser:
+      type: object
+      required:
+        - email
+        - password
+
+      properties:
+        email:
+          type: string
+          example: keks@htmlacademy.ru
+
+        password:
+          type: string
+          example: 123456
+
+    error:
+      type: object
+
+      properties:
+        code:
+          type: string
+          example: 401
+        message:
+          type: string
+          example: Неверный логин или пароль.
