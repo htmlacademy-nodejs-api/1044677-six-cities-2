@@ -136,7 +136,78 @@ paths:
 
         "400":
           description: Неверный формат изображения.
+
+  /offers/{offerId}/comments:
+    get:
+      tags:
+        - comments
+      summary: Получение списка комментариев для предложения
+      description: |-
+        Возвращает комментарии к предложению об аренде.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      responses:
+        "200":
+          description: Список комментариев к предложению.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/comment'
+
+        "404":
+          description: Предложение с таким идентификатором не найдено.
+
+    post:
+      tags:
+        - comments
+      summary: Добавление комментария к предложению
+      description: |-
+        Создаёт новый комментарий.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      requestBody:
+        description: Текст комментария и оценка от 1 до 5.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createComment'
+        required: true
+
+      responses:
+        "201":
+          description: Комментарий создан.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/comment'
+
+        "400":
+          description: Некорректные данные.
+
+        "401":
+          description: Пользователь не авторизован.
+
+        "404":
+          description: Предложение не найдено.
+
 components:
+
+  parameters:
+    offerId:
+      name: offerId
+      in: path
+      required: true
+      description: Идентификатор предложения в базе данных.
+      schema:
+        type: string
+        example: 6329c3d6a04ab1061c6425eb
+
   schemas:
     createUser:
       type: object
@@ -222,3 +293,68 @@ components:
         message:
           type: string
           example: Неверный логин или пароль.
+
+    createComment:
+      type: object
+      description: Данные для создания комментария к предложению.
+      required:
+        - comment
+        - rating
+
+      properties:
+        comment:
+          type: string
+          description: Текст комментария.
+          minLength: 5
+          maxLength: 1024
+          example: Всё понравилось.
+
+        rating:
+          type: integer
+          description: Оценка размещения от 1 до 5.
+          minimum: 1
+          maximum: 5
+          example: 4
+
+    comment:
+      type: object
+      description: Комментарий.
+      required:
+        - id
+        - comment
+        - postDate
+        - rating
+        - userId
+        - user
+
+      properties:
+        id:
+          type: string
+          description: Идентификатор комментария.
+          example: 6329c3d6a04ab1061c6425ec
+
+        comment:
+          type: string
+          description: Текст комментария.
+          example: Всё понравилось.
+
+        postDate:
+          type: string
+          format: date-time
+          description: Дата публикации комментария.
+          example: "2026-04-13T14:30:00.000Z"
+
+        rating:
+          type: integer
+          description: Оценка от 1 до 5.
+          minimum: 1
+          maximum: 5
+          example: 5
+
+        userId:
+          type: string
+          description: Идентификатор автора комментария.
+          example: 6329c3d6a04ab1061c6425ea
+
+        user:
+          $ref: '#/components/schemas/user'
