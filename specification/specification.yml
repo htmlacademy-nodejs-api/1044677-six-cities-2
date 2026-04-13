@@ -137,6 +137,111 @@ paths:
         "400":
           description: Неверный формат изображения.
 
+  /offers:
+    get:
+      tags:
+        - offers
+      summary: Список предложений по аренде
+      description: |-
+        Возвращает список карточек предложений.
+
+      responses:
+        "200":
+          description: Список предложений.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/offer'
+
+    post:
+      tags:
+        - offers
+      summary: Создание нового предложения
+      description: Добавляет новое объявление об аренде.
+
+      requestBody:
+        description: Данные нового предложения.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createOffer'
+        required: true
+
+      responses:
+        "201":
+          description: Предложение создано.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/offer'
+
+  /offers/{offerId}:
+    get:
+      tags:
+        - offers
+      summary: Детальная информация о предложении
+      description: Возвращает полные данные одного предложения.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      responses:
+        "200":
+          description: Данные предложения.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/offer'
+
+        "404":
+          description: Предложение не найдено.
+
+    patch:
+      tags:
+        - offers
+      summary: Редактирование предложения
+      description: Обновляет данные существующего объявления.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      requestBody:
+        description: Поля для изменения.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/offer'
+        required: false
+
+      responses:
+        "200":
+          description: Предложение обновлено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/offer'
+
+        "404":
+          description: Предложение не найдено.
+
+    delete:
+      tags:
+        - offers
+      summary: Удаление предложения
+      description: Удаляет объявление из каталога.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      responses:
+        "204":
+          description: Предложение удалено.
+
+        "404":
+          description: Предложение не найдено.
+
   /offers/{offerId}/comments:
     get:
       tags:
@@ -197,7 +302,6 @@ paths:
           description: Предложение не найдено.
 
 components:
-
   parameters:
     offerId:
       name: offerId
@@ -316,6 +420,131 @@ components:
           maximum: 5
           example: 4
 
+    offer:
+      type: object
+      description: Предложение об аренде.
+
+    createOffer:
+      type: object
+      description: Данные для создания предложения.
+      required:
+        - title
+        - description
+        - postDate
+        - city
+        - previewImage
+        - images
+        - isPremium
+        - isFavorite
+        - rating
+        - type
+        - bedrooms
+        - maxAdults
+        - price
+        - goods
+        - userId
+        - location
+
+      properties:
+        title:
+          type: string
+          description: Заголовок предложения.
+          example: 'Beautiful apartment in the center of the city'
+
+        description:
+          type: string
+          description: Описание предложения.
+          example: 'Beautiful apartment in the center of the city'
+
+        postDate:
+          type: string
+          description: Дата публикации предложения.
+          example: '2026-04-13T14:30:00.000Z'
+
+        city:
+          type: string
+          description: Город предложения.
+          example: 'Paris'
+
+        previewImage:
+          type: string
+          description: Превью предложения.
+          example: 'img/preview.jpg'
+
+        images:
+          type: array
+          description: Изображения предложения.
+          items:
+            type: string
+            example: 'img/image1.jpg'
+
+        isPremium:
+          type: boolean
+          description: Премиум - статус предложения.
+          example: true
+
+        isFavorite:
+          type: boolean
+          description: Избранное - статус предложения.
+          example: true
+
+        rating:
+          type: number
+          description: Оценка предложения.
+          example: 4
+
+        type:
+          type: string
+          description: Тип предложения.
+          example: 'apartment'
+
+        bedrooms:
+          type: number
+          description: Количество спален.
+          example: 2
+
+        maxAdults:
+          type: number
+          description: Максимальное количество взрослых.
+          example: 2
+
+        price:
+          type: number
+          description: Цена предложения.
+          example: 100
+
+        goods:
+          type: array
+          description: Удобства предложения.
+          items:
+            type: string
+            example: 'Wi-Fi'
+
+        userId:
+          type: string
+          description: Идентификатор автора предложения.
+          example: 6329c3d6a04ab1061c6425ea
+
+        location:
+          $ref: '#/components/schemas/location'
+
+    location:
+      type: object
+      description: Географические координаты предложения.
+      required:
+        - latitude
+        - longitude
+
+      properties:
+        latitude:
+          type: number
+          description: Широта.
+          example: 52.370216
+
+        longitude:
+          type: number
+          description: Долгота.
+          example: 4.895168
     comment:
       type: object
       description: Комментарий.
