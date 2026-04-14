@@ -1,0 +1,589 @@
+openapi: 3.1.0
+info:
+  title: API сервер для учебного проекта «Шесть городов».
+  description: |-
+    * Список ресурсов и маршрутов сервера «Шесть городов».
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+tags:
+  - name: users
+    description: Действия с пользователем.
+  - name: offers
+    description: Действия с объявлениями.
+  - name: comments
+    description: Действия с комментариями.
+
+
+paths:
+  /users/register:
+    post:
+      tags:
+        - users
+      summary: Регистрация пользователя
+      description: Регистрирует нового пользователя.
+
+      requestBody:
+        description: Информация для создания нового пользователя.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createUser'
+        required: true
+
+      responses:
+        "201":
+          description: Пользователь зарегистрирован. Объект пользователя.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+
+        "409":
+          description: Пользователь с таким email уже существует.
+
+  /users/login:
+    post:
+      tags:
+        - users
+      summary: Авторизация пользователя
+      description: Авторизует пользователя на основе логина и пароля
+
+      requestBody:
+        description: Информация для авторизации пользователя.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginUser'
+        required: true
+
+      responses:
+        "200":
+          description: Пользователь авторизован. Объект пользователя.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+
+        "401":
+          description: Неверный логин или пароль.
+
+    get:
+      tags:
+        - users
+      summary: Проверка состояния пользователя
+      description: Возвращает информацию по авторизованному пользователю
+
+      responses:
+        "200":
+          description: Пользователь авторизован. Объект пользователя.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+
+        "401":
+          description: Неверный логин или пароль.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /users/logout:
+    post:
+      tags:
+        - users
+      summary: Выход из закрытой части приложения
+      description: Завершает сеанс авторизованного пользователя.
+
+      responses:
+        "204":
+          description: Пользователь разлогинился.
+
+        "401":
+          description: Пользователь не авторизован.
+
+  /users/{userId}/avatar:
+    post:
+      tags:
+        - users
+      summary: Загрузить изображение аватара
+      description: Загружает изображение аватара пользователя. Изображение
+        аватара должно быть в формате `png` или `jpg`.
+
+      requestBody:
+        description: Информация для загрузки изображения аватара.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+        required: true
+
+      responses:
+        "200":
+          description: Изображение аватара загружено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+
+        "400":
+          description: Неверный формат изображения.
+
+  /offers:
+    get:
+      tags:
+        - offers
+      summary: Список предложений по аренде
+      description: |-
+        Возвращает список карточек предложений.
+
+      responses:
+        "200":
+          description: Список предложений.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/offer'
+
+    post:
+      tags:
+        - offers
+      summary: Создание нового предложения
+      description: Добавляет новое объявление об аренде.
+
+      requestBody:
+        description: Данные нового предложения.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createOffer'
+        required: true
+
+      responses:
+        "201":
+          description: Предложение создано.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/offer'
+
+  /offers/{offerId}:
+    get:
+      tags:
+        - offers
+      summary: Детальная информация о предложении
+      description: Возвращает полные данные одного предложения.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      responses:
+        "200":
+          description: Данные предложения.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/offer'
+
+        "404":
+          description: Предложение не найдено.
+
+    patch:
+      tags:
+        - offers
+      summary: Редактирование предложения
+      description: Обновляет данные существующего объявления.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      requestBody:
+        description: Поля для изменения.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/offer'
+        required: false
+
+      responses:
+        "200":
+          description: Предложение обновлено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/offer'
+
+        "404":
+          description: Предложение не найдено.
+
+    delete:
+      tags:
+        - offers
+      summary: Удаление предложения
+      description: Удаляет объявление из каталога.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      responses:
+        "204":
+          description: Предложение удалено.
+
+        "404":
+          description: Предложение не найдено.
+
+  /offers/{offerId}/comments:
+    get:
+      tags:
+        - comments
+      summary: Получение списка комментариев для предложения
+      description: |-
+        Возвращает комментарии к предложению об аренде.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      responses:
+        "200":
+          description: Список комментариев к предложению.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/comment'
+
+        "404":
+          description: Предложение с таким идентификатором не найдено.
+
+    post:
+      tags:
+        - comments
+      summary: Добавление комментария к предложению
+      description: |-
+        Создаёт новый комментарий.
+
+      parameters:
+        - $ref: '#/components/parameters/offerId'
+
+      requestBody:
+        description: Текст комментария и оценка от 1 до 5.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createComment'
+        required: true
+
+      responses:
+        "201":
+          description: Комментарий создан.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/comment'
+
+        "400":
+          description: Некорректные данные.
+
+        "401":
+          description: Пользователь не авторизован.
+
+        "404":
+          description: Предложение не найдено.
+
+components:
+  parameters:
+    offerId:
+      name: offerId
+      in: path
+      required: true
+      description: Идентификатор предложения в базе данных.
+      schema:
+        type: string
+        example: 6329c3d6a04ab1061c6425eb
+
+  schemas:
+    createUser:
+      type: object
+      required:
+        - email
+        - name
+        - password
+        - isPro
+
+      properties:
+        email:
+          type: string
+          example: keks@htmlacademy.ru
+
+        avatarPath:
+          type: string
+          example: img/avatar.jpg
+
+        name:
+          type: string
+          example: Keks the Cat
+
+        password:
+          type: string
+          example: 123456
+
+        isPro:
+          type: boolean
+          example: false
+
+    user:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - avatarPath
+        - isPro
+
+      properties:
+        id:
+          type: string
+          example: 6329c3d6a04ab1061c6425ea
+
+        email:
+          type: string
+          example: keks@htmlacademy.ru
+
+        name:
+          type: string
+          example: Keks the Cat
+
+        avatarPath:
+          type: string
+          example: img/avatar.jpg
+
+        isPro:
+          type: boolean
+          example: false
+
+    loginUser:
+      type: object
+      required:
+        - email
+        - password
+
+      properties:
+        email:
+          type: string
+          example: keks@htmlacademy.ru
+
+        password:
+          type: string
+          example: 123456
+
+    error:
+      type: object
+
+      properties:
+        code:
+          type: string
+          example: 401
+        message:
+          type: string
+          example: Неверный логин или пароль.
+
+    createComment:
+      type: object
+      description: Данные для создания комментария к предложению.
+      required:
+        - comment
+        - rating
+
+      properties:
+        comment:
+          type: string
+          description: Текст комментария.
+          minLength: 5
+          maxLength: 1024
+          example: Всё понравилось.
+
+        rating:
+          type: integer
+          description: Оценка размещения от 1 до 5.
+          minimum: 1
+          maximum: 5
+          example: 4
+
+    offer:
+      type: object
+      description: Предложение об аренде.
+
+    createOffer:
+      type: object
+      description: Данные для создания предложения.
+      required:
+        - title
+        - description
+        - postDate
+        - city
+        - previewImage
+        - images
+        - isPremium
+        - isFavorite
+        - rating
+        - type
+        - bedrooms
+        - maxAdults
+        - price
+        - goods
+        - userId
+        - location
+
+      properties:
+        title:
+          type: string
+          description: Заголовок предложения.
+          example: 'Beautiful apartment in the center of the city'
+
+        description:
+          type: string
+          description: Описание предложения.
+          example: 'Beautiful apartment in the center of the city'
+
+        postDate:
+          type: string
+          description: Дата публикации предложения.
+          example: '2026-04-13T14:30:00.000Z'
+
+        city:
+          type: string
+          description: Город предложения.
+          example: 'Paris'
+
+        previewImage:
+          type: string
+          description: Превью предложения.
+          example: 'img/preview.jpg'
+
+        images:
+          type: array
+          description: Изображения предложения.
+          items:
+            type: string
+            example: 'img/image1.jpg'
+
+        isPremium:
+          type: boolean
+          description: Премиум - статус предложения.
+          example: true
+
+        isFavorite:
+          type: boolean
+          description: Избранное - статус предложения.
+          example: true
+
+        rating:
+          type: number
+          description: Оценка предложения.
+          example: 4
+
+        type:
+          type: string
+          description: Тип предложения.
+          example: 'apartment'
+
+        bedrooms:
+          type: number
+          description: Количество спален.
+          example: 2
+
+        maxAdults:
+          type: number
+          description: Максимальное количество взрослых.
+          example: 2
+
+        price:
+          type: number
+          description: Цена предложения.
+          example: 100
+
+        goods:
+          type: array
+          description: Удобства предложения.
+          items:
+            type: string
+            example: 'Wi-Fi'
+
+        userId:
+          type: string
+          description: Идентификатор автора предложения.
+          example: 6329c3d6a04ab1061c6425ea
+
+        location:
+          $ref: '#/components/schemas/location'
+
+    location:
+      type: object
+      description: Географические координаты предложения.
+      required:
+        - latitude
+        - longitude
+
+      properties:
+        latitude:
+          type: number
+          description: Широта.
+          example: 52.370216
+
+        longitude:
+          type: number
+          description: Долгота.
+          example: 4.895168
+    comment:
+      type: object
+      description: Комментарий.
+      required:
+        - id
+        - comment
+        - postDate
+        - rating
+        - userId
+        - user
+
+      properties:
+        id:
+          type: string
+          description: Идентификатор комментария.
+          example: 6329c3d6a04ab1061c6425ec
+
+        comment:
+          type: string
+          description: Текст комментария.
+          example: Всё понравилось.
+
+        postDate:
+          type: string
+          format: date-time
+          description: Дата публикации комментария.
+          example: "2026-04-13T14:30:00.000Z"
+
+        rating:
+          type: integer
+          description: Оценка от 1 до 5.
+          minimum: 1
+          maximum: 5
+          example: 5
+
+        userId:
+          type: string
+          description: Идентификатор автора комментария.
+          example: 6329c3d6a04ab1061c6425ea
+
+        user:
+          $ref: '#/components/schemas/user'
