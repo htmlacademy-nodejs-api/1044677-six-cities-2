@@ -1,10 +1,12 @@
 import { inject, injectable } from 'inversify';
 import { OfferEntity } from './offer.entity.js';
 import { Logger } from '../../libs/logger/index.js';
+import { DEFAULT_OFFERS_LIMIT } from './offer.constant.js';
 import { DocumentType, types } from '@typegoose/typegoose';
 import { CreateOfferDto } from './dto/create-offer.dto.js';
+import { UpdateOfferDto } from './dto/update-offer.dto.js';
 import { OfferService } from './offer-service.interface.js';
-import { City, Component, HousingType } from '../../types/index.js';
+import { City, Component, HousingType, SortType } from '../../types/index.js';
 
 @injectable()
 export class DefaultOfferService implements OfferService {
@@ -53,5 +55,56 @@ export class DefaultOfferService implements OfferService {
       return existing;
     }
     return this.create(dto);
+  }
+
+  public async find(count?: number): Promise<DocumentType<OfferEntity>[]> {
+    const offersLimit = count ?? DEFAULT_OFFERS_LIMIT;
+    return this.offerModel
+      .find({}, {limit: offersLimit})
+      .populate(['userId'])
+      .exec();
+  }
+
+  public async deleteById(offerId: string): Promise<DocumentType<OfferEntity> | null> {
+    return this.offerModel
+      .findByIdAndDelete(offerId)
+      .exec();
+  }
+
+  public async updateById(offerId: string, dto: UpdateOfferDto): Promise<DocumentType<OfferEntity> | null> {
+    return this.offerModel
+      .findByIdAndUpdate(offerId, dto, {new: true})
+      .populate(['userId'])
+      .exec();
+  }
+
+  public async exists(documentId: string): Promise<boolean> {
+    return (await this.offerModel
+      .exists({_id: documentId})) !== null;
+  }
+
+  public async incCommentCount(offerId: string): Promise<DocumentType<OfferEntity> | null> {
+    return this.offerModel
+      .findByIdAndUpdate(offerId, {'$inc': {
+        commentCount: 1,
+      }}).exec();
+  }
+
+  public async findNew(count: number): Promise<DocumentType<OfferEntity>[]> {
+    return this.offerModel
+      .find()
+      .sort({ createdAt: SortType.Down })
+      .limit(count)
+      .populate(['userId'])
+      .exec();
+  }
+
+  public async findDiscussed(count: number): Promise<DocumentType<OfferEntity>[]> {
+    return this.offerModel
+      .find()
+      .sort({ commentCount: SortType.Down })
+      .limit(count)
+      .populate(['userId'])
+      .exec();
   }
 }
