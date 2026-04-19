@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { OfferEntity } from './offer.entity.js';
+import { CommentModel } from '../comment/index.js';
 import { Logger } from '../../libs/logger/index.js';
 import { DEFAULT_OFFERS_LIMIT } from './offer.constant.js';
 import { DocumentType, types } from '@typegoose/typegoose';
@@ -66,6 +67,8 @@ export class DefaultOfferService implements OfferService {
   }
 
   public async deleteById(offerId: string): Promise<DocumentType<OfferEntity> | null> {
+    await CommentModel.deleteMany({ offerId }).exec();
+
     return this.offerModel
       .findByIdAndDelete(offerId)
       .exec();
@@ -81,13 +84,6 @@ export class DefaultOfferService implements OfferService {
   public async exists(documentId: string): Promise<boolean> {
     return (await this.offerModel
       .exists({_id: documentId})) !== null;
-  }
-
-  public async incCommentCount(offerId: string): Promise<DocumentType<OfferEntity> | null> {
-    return this.offerModel
-      .findByIdAndUpdate(offerId, {'$inc': {
-        commentCount: 1,
-      }}).exec();
   }
 
   public async findNew(count: number): Promise<DocumentType<OfferEntity>[]> {
